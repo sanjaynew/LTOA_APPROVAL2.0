@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UP LTOA Approvals — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --rust-900:#5b1f0f;
+    --rust-800:#7c2d12;
+    --orange-700:#c2410c;
+    --orange-600:#ea580c;
+    --orange-500:#f97316;
+    --amber-400:#fb923c;
+    --amber-300:#fdba74;
+    --cream:#fff7ed;
+    --cream-2:#fffaf5;
+    --paper:#ffffff;
+    --ink:#3a1c0f;
+    --ink-soft:#7a4a34;
+    --line:#f0d9c3;
+    --shadow: 0 10px 30px -12px rgba(124,45,18,0.28);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Inter',system-ui,sans-serif;
+    background:var(--cream);
+    color:var(--ink);
+    min-height:100vh;
+  }
+  ::selection{ background:var(--amber-300); }
+
+  /* ---------- Hero ---------- */
+  .hero{
+    position:relative;
+    padding:44px 40px 90px;
+    background:
+      radial-gradient(1100px 480px at 12% -10%, rgba(255,255,255,0.16), transparent 60%),
+      linear-gradient(120deg, var(--rust-900) 0%, var(--orange-700) 46%, var(--orange-500) 78%, var(--amber-400) 100%);
+    color:#fff8f0;
+    overflow:hidden;
+  }
+  .hero::after{
+    content:"";
+    position:absolute; inset:0;
+    background-image: radial-gradient(circle, rgba(255,255,255,0.22) 1px, transparent 1.4px);
+    background-size: 26px 26px;
+    opacity:.25;
+    mix-blend-mode:overlay;
+    pointer-events:none;
+  }
+  .hero-top{
+    position:relative;
+    display:flex; align-items:flex-start; justify-content:space-between; gap:24px; flex-wrap:wrap;
+  }
+  .eyebrow{
+    font-size:13px; font-weight:600; letter-spacing:.02em; color:#ffe4cc;
+    opacity:.9; margin:0 0 6px;
+  }
+  .hero h1{
+    font-family:'Outfit',sans-serif;
+    font-weight:700;
+    font-size:clamp(28px,3.4vw,40px);
+    margin:0 0 8px;
+    letter-spacing:-0.01em;
+  }
+  .hero p.sub{
+    margin:0; max-width:560px; font-size:15.5px; line-height:1.55; color:#ffe9d6;
+  }
+  .hero-meta{
+    text-align:right; font-size:13px; color:#ffe4cc; line-height:1.6;
+  }
+  .hero-meta strong{ color:#fff; font-weight:600; }
+
+  /* ---------- KPI row ---------- */
+  .kpi-row{
+    position:relative;
+    z-index:2;
+    display:grid;
+    grid-template-columns:repeat(6,1fr);
+    gap:14px;
+    margin-top:34px;
+  }
+  .kpi{
+    background:rgba(255,255,255,0.14);
+    border:1px solid rgba(255,255,255,0.28);
+    backdrop-filter:blur(6px);
+    border-radius:14px;
+    padding:16px 16px 14px;
+    cursor:pointer;
+    transition:transform .16s ease, background .16s ease, border-color .16s ease;
+    text-align:left;
+    user-select:none;
+  }
+  .kpi:hover{ transform:translateY(-3px); background:rgba(255,255,255,0.2); }
+  .kpi.active{
+    background:#fff;
+    border-color:#fff;
+  }
+  .kpi.active .kpi-label{ color:var(--orange-700); }
+  .kpi.active .kpi-value{ color:var(--rust-900); }
+  .kpi.active .kpi-sub{ color:var(--ink-soft); }
+  .kpi-label{
+    font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:.05em;
+    color:#ffe9d6; margin:0 0 6px;
+  }
+  .kpi-value{
+    font-family:'Outfit',sans-serif;
+    font-size:26px; font-weight:700; color:#fff; line-height:1;
+    margin:0 0 4px;
+  }
+  .kpi-sub{ font-size:11.5px; color:#ffe4cc; margin:0; }
+
+  /* ---------- Body / card ---------- */
+  .wrap{
+    max-width:1360px; margin:-52px auto 60px; padding:0 40px;
+    position:relative; z-index:3;
+  }
+  .card{
+    background:var(--paper);
+    border-radius:18px;
+    box-shadow:var(--shadow);
+    border:1px solid var(--line);
+    overflow:hidden;
+  }
+
+  /* ---------- Filters ---------- */
+  .filters{
+    padding:20px 24px;
+    background:linear-gradient(180deg, var(--cream-2), #fff);
+    border-bottom:1px solid var(--line);
+    display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end;
+  }
+  .field{ display:flex; flex-direction:column; gap:6px; min-width:150px; flex:1 1 150px; }
+  .field label{
+    font-size:11px; font-weight:600; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.04em;
+  }
+  .field select, .field input{
+    font-family:'Inter',sans-serif;
+    font-size:13.5px;
+    padding:9px 10px;
+    border-radius:9px;
+    border:1.5px solid var(--line);
+    background:#fff;
+    color:var(--ink);
+    outline:none;
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  .field select:focus, .field input:focus{
+    border-color:var(--orange-500);
+    box-shadow:0 0 0 3px rgba(249,115,22,0.15);
+  }
+  .field.search{ flex:1 1 220px; min-width:200px; }
+  .field.search input{ width:100%; }
+  .reset-btn{
+    padding:9px 16px;
+    border-radius:9px;
+    border:1.5px solid var(--orange-600);
+    background:#fff;
+    color:var(--orange-700);
+    font-weight:600; font-size:13px;
+    cursor:pointer;
+    transition:background .15s ease, color .15s ease;
+    white-space:nowrap;
+  }
+  .reset-btn:hover{ background:var(--orange-600); color:#fff; }
+  .result-count{
+    font-size:12.5px; color:var(--ink-soft); padding:0 24px 14px;
+    background:#fff;
+  }
+  .result-count b{ color:var(--orange-700); }
+
+  /* ---------- Table ---------- */
+  .table-scroll{ overflow-x:auto; }
+  table{ width:100%; border-collapse:collapse; min-width:1180px; }
+  thead th{
+    position:sticky; top:0;
+    background:var(--rust-900);
+    background-image:linear-gradient(180deg, var(--rust-800), var(--rust-900));
+    color:#ffe9d6;
+    font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; font-weight:600;
+    padding:12px 14px;
+    text-align:left;
+    cursor:pointer;
+    white-space:nowrap;
+    user-select:none;
+  }
+  thead th:hover{ color:#fff; }
+  thead th .arrow{ opacity:.55; font-size:10px; margin-left:4px; }
+  thead th.sorted .arrow{ opacity:1; color:var(--amber-300); }
+  tbody tr{ border-bottom:1px solid var(--line); transition:background .12s ease; }
+  tbody tr:hover{ background:var(--cream-2); }
+  tbody td{ padding:12px 14px; font-size:13.5px; color:var(--ink); vertical-align:top; }
+  tbody td.num{ font-variant-numeric:tabular-nums; }
+  .consumer-cell strong{ display:block; font-size:13.8px; color:var(--rust-900); font-weight:600; }
+  .consumer-cell span{ display:block; font-size:11.5px; color:var(--ink-soft); margin-top:2px; }
+  .muted{ color:#b48a72; }
+
+  .pill{
+    display:inline-block; padding:4px 10px; border-radius:999px;
+    font-size:11.5px; font-weight:600; white-space:nowrap;
+  }
+  .pill.Delivered{ background:#dcfce7; color:#166534; }
+  .pill.Scheduled{ background:#fef3c7; color:#92400e; }
+  .pill.In-progress{ background:#ffedd5; color:#c2410c; }
+  .pill.Early-stage{ background:#fee2e2; color:#b91c1c; }
+
+  .progress-wrap{ display:flex; align-items:center; gap:8px; min-width:120px; }
+  .progress-track{
+    flex:1; height:7px; border-radius:99px; background:#f3e3d3; overflow:hidden;
+  }
+  .progress-fill{
+    height:100%; border-radius:99px;
+    background:linear-gradient(90deg, var(--orange-600), var(--amber-400));
+  }
+  .progress-text{ font-size:11px; color:var(--ink-soft); white-space:nowrap; }
+
+  .empty-state{
+    padding:60px 20px; text-align:center; color:var(--ink-soft);
+  }
+  .empty-state .big{ font-size:34px; margin-bottom:8px; }
+
+  footer{
+    max-width:1360px; margin:0 auto 40px; padding:0 40px;
+    font-size:12px; color:var(--ink-soft); text-align:center;
+  }
+
+  @media (max-width:1000px){
+    .kpi-row{ grid-template-columns:repeat(3,1fr); }
+    .hero{ padding:32px 20px 80px; }
+    .wrap{ padding:0 16px; }
+  }
+  @media (max-width:640px){
+    .kpi-row{ grid-template-columns:repeat(2,1fr); }
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-top">
+    <div>
+      <p class="eyebrow">UP · LTOA APPROVAL TRACKER</p>
+      <h1>Long Term Open Access Pipeline</h1>
+      <p class="sub">Live view of solar capacity moving through PPA, DISCOM NOC, LT-2 and consumer registration on the way to power delivery.</p>
+    </div>
+    <div class="hero-meta">
+      Sheet: <strong>UP LTOA approvals</strong><br>
+      Snapshot date: <strong>14 Sep 2026</strong>
+    </div>
+  </div>
+
+  <div class="kpi-row" id="kpiRow"></div>
+</div>
+
+<div class="wrap">
+  <div class="card">
+    <div class="filters">
+      <div class="field search">
+        <label for="fSearch">Search</label>
+        <input id="fSearch" type="text" placeholder="Consumer, SPV, location…">
+      </div>
+      <div class="field">
+        <label for="fSpv">SPV</label>
+        <select id="fSpv"><option value="">All SPVs</option></select>
+      </div>
+      <div class="field">
+        <label for="fLocation">Location</label>
+        <select id="fLocation"><option value="">All locations</option></select>
+      </div>
+      <div class="field">
+        <label for="fDiscom">DISCOM</label>
+        <select id="fDiscom"><option value="">All DISCOMs</option></select>
+      </div>
+      <div class="field">
+        <label for="fBd">BD Team</label>
+        <select id="fBd"><option value="">All BD leads</option></select>
+      </div>
+      <div class="field">
+        <label for="fConsultant">Consultant</label>
+        <select id="fConsultant"><option value="">All consultants</option></select>
+      </div>
+      <div class="field">
+        <label for="fStatus">Status</label>
+        <select id="fStatus"><option value="">All statuses</option></select>
+      </div>
+      <button class="reset-btn" id="resetBtn">Reset filters</button>
+    </div>
+
+    <div class="result-count" id="resultCount"></div>
+
+    <div class="table-scroll">
+      <table id="dataTable">
+        <thead>
+          <tr>
+            <th data-key="sr">Sr. <span class="arrow">↕</span></th>
+            <th data-key="consumer">Consumer <span class="arrow">↕</span></th>
+            <th data-key="spv">SPV <span class="arrow">↕</span></th>
+            <th data-key="location">Location <span class="arrow">↕</span></th>
+            <th data-key="discom">DISCOM <span class="arrow">↕</span></th>
+            <th data-key="capMW">Capacity (MW) <span class="arrow">↕</span></th>
+            <th data-key="tariff">Tariff (₹/kWh) <span class="arrow">↕</span></th>
+            <th data-key="stagesComplete">Progress <span class="arrow">↕</span></th>
+            <th data-key="powerDelivery">Power delivery <span class="arrow">↕</span></th>
+            <th data-key="status">Status <span class="arrow">↕</span></th>
+            <th data-key="bdTeam">BD / Consultant <span class="arrow">↕</span></th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+    <div class="empty-state" id="emptyState" style="display:none;">
+      <div class="big">🧡</div>
+      No projects match these filters — try widening your search.
+    </div>
+  </div>
+</div>
+
+<footer>UP LTOA Approvals dashboard · built from the "UP LTOA approvals" sheet · click a KPI card to filter by status</footer>
+
+<script>
+const DATA = [{"sr": "1", "spv": "Netra Renewable Energy Pvt Ltd", "location": "Erach", "consumer": "Max Square Ltd", "capMWp": 5.5, "capMW": 3.67, "tariff": 3.49, "discom": "PVVNL", "bdTeam": "Paurush", "consultant": "AR Electro", "ltoaPPA": "25 Jun 2026", "powerDelivery": "10 Feb 2026", "remarks": "STOA power supply", "stagesComplete": 6, "stagesTotal": 11, "status": "Delivered"}, {"sr": "2", "spv": "Netra Renewable Energy Pvt Ltd", "location": "Erach", "consumer": "Apollo Coated Products", "capMWp": 11.0, "capMW": 7.33, "tariff": 3.23, "discom": "PVVNL", "bdTeam": "Paurush", "consultant": "AR Electro", "ltoaPPA": "28 May 2024", "powerDelivery": "19 Feb 2026", "remarks": null, "stagesComplete": 11, "stagesTotal": 11, "status": "Delivered"}, {"sr": "3", "spv": "Netra Renewable Energy Pvt Ltd", "location": "Erach", "consumer": "Bisleri International Ltd", "capMWp": 2.5, "capMW": 1.67, "tariff": 3.5, "discom": "PVVNL", "bdTeam": "Amritesh", "consultant": "AR Electro", "ltoaPPA": "30 Sep 2025", "powerDelivery": "01 Jun 2026", "remarks": null, "stagesComplete": 11, "stagesTotal": 11, "status": "Delivered"}, {"sr": "4", "spv": "Netra Renewable Energy Pvt Ltd", "location": "Erach", "consumer": "LG Electronics", "capMWp": 11.0, "capMW": 7.33, "tariff": 3.2, "discom": "NPCL", "bdTeam": "Amritesh", "consultant": "Topnotch", "ltoaPPA": "19 Jan 2026", "powerDelivery": "18 May 2026", "remarks": null, "stagesComplete": 11, "stagesTotal": 11, "status": "Delivered"}, {"sr": "5", "spv": "Netra Renewable Energy Pvt Ltd", "location": "Erach", "consumer": "GK Winding Wires", "capMWp": 2.5, "capMW": 1.67, "tariff": 3.28, "discom": "NPCL", "bdTeam": "Paurush", "consultant": "AR Electro", "ltoaPPA": "17 Nov 2025", "powerDelivery": "14 Jun 2026", "remarks": null, "stagesComplete": 11, "stagesTotal": 11, "status": "Delivered"}, {"sr": "6", "spv": "Netra Renewable Energy Pvt Ltd", "location": "Erach", "consumer": "SIFY Infinit Spaces Ltd", "capMWp": 30.0, "capMW": 18.0, "tariff": 3.24, "discom": "PVVNL", "bdTeam": "Amritesh", "consultant": "Topnotch", "ltoaPPA": "26 Mar 2026", "powerDelivery": "01 Jun 2026", "remarks": "Multiple queries in LTOA consumer registration application STOA power supply from 1st June for 14 MW", "stagesComplete": 10, "stagesTotal": 11, "status": "Delivered"}, {"sr": "7", "spv": "Netra Renewable Energy Pvt Ltd", "location": "Erach", "consumer": "INOX Air Products Ltd", "capMWp": 4.2, "capMW": 4.2, "tariff": 3.19, "discom": "NPCL", "bdTeam": "Kartikeya", "consultant": "AR Electro", "ltoaPPA": "02 Mar 2026", "powerDelivery": "19 Jun 2026", "remarks": "STOA Power supply", "stagesComplete": 9, "stagesTotal": 11, "status": "Delivered"}, {"sr": "8", "spv": "Netra Renewable Energy Pvt Ltd", "location": "Erach", "consumer": "International Tobacco", "capMWp": 3.2, "capMW": 2.13, "tariff": 3.26, "discom": "PVVNL", "bdTeam": "Paurush", "consultant": "AR Electro", "ltoaPPA": "15 Apr 2026", "powerDelivery": "01 Sep 2026", "remarks": "EE nomination pending", "stagesComplete": 10, "stagesTotal": 11, "status": "Delivered"}, {"sr": "9", "spv": "Netra Renewable Energy Pvt Ltd", "location": "Erach", "consumer": "Jakson Engineers Ltd", "capMWp": 3.5, "capMW": 2.33, "tariff": 3.35, "discom": "NPCL", "bdTeam": "Paurush", "consultant": "Topnotch", "ltoaPPA": "13 Mar 2026", "powerDelivery": "01 Nov 2026", "remarks": "LT-1 submitted with UPPTCL", "stagesComplete": 2, "stagesTotal": 11, "status": "Scheduled"}, {"sr": "10", "spv": "Netra Renewable Energy Pvt Ltd", "location": "Erach", "consumer": "Haldiram C-1", "capMWp": 7.0, "capMW": 4.67, "tariff": 3.39, "discom": "PVVNL", "bdTeam": "Vinod", "consultant": "Topnotch", "ltoaPPA": "07 Jul 2025", "powerDelivery": null, "remarks": null, "stagesComplete": 5, "stagesTotal": 11, "status": "In progress"}, {"sr": "11", "spv": "Netra Renewable Energy Pvt Ltd", "location": "Erach", "consumer": "SKVR", "capMWp": 6.3, "capMW": 2.0, "tariff": 3.19, "discom": "PVVNL", "bdTeam": "Amritesh", "consultant": "Topnotch", "ltoaPPA": "15 Dec 2025", "powerDelivery": null, "remarks": null, "stagesComplete": 1, "stagesTotal": 11, "status": "Early stage"}, {"sr": "12", "spv": "Sunsure Energy Pvt Ltd", "location": "Charkhari", "consumer": "UTCL-Aligarh", "capMWp": 30.0, "capMW": 20.0, "tariff": 2.95, "discom": "DVVNL", "bdTeam": "Vinod Sir", "consultant": "Topnotch", "ltoaPPA": "18 Mar 2026", "powerDelivery": null, "remarks": null, "stagesComplete": 6, "stagesTotal": 11, "status": "In progress"}, {"sr": "13", "spv": "Sunsure Energy Pvt Ltd", "location": "Charkhari", "consumer": "UTCL-Dadri", "capMWp": 12.0, "capMW": 8.0, "tariff": 2.95, "discom": "PVVNL", "bdTeam": "Vinod Sir", "consultant": "Topnotch", "ltoaPPA": "19 Mar 2026", "powerDelivery": null, "remarks": null, "stagesComplete": 6, "stagesTotal": 11, "status": "In progress"}, {"sr": "14", "spv": "Sunsure Energy Pvt Ltd", "location": "Charkhari", "consumer": "UTCL-Shahjahanpur", "capMWp": 18.0, "capMW": 12.0, "tariff": 2.95, "discom": "MVVNL", "bdTeam": "Vinod Sir", "consultant": "Topnotch", "ltoaPPA": "20 Mar 2026", "powerDelivery": null, "remarks": null, "stagesComplete": 6, "stagesTotal": 11, "status": "In progress"}, {"sr": "15", "spv": "Sunsure Solarpark Five Pvt Ltd", "location": "Pinahat", "consumer": "Elin Electronics Ltd", "capMWp": 1.7, "capMW": 1.14, "tariff": null, "discom": "PVVNL", "bdTeam": "Paurush", "consultant": "AR Electro", "ltoaPPA": "28 Oct 2025", "powerDelivery": "26 Jul 2026", "remarks": null, "stagesComplete": 8, "stagesTotal": 11, "status": "Delivered"}, {"sr": "16", "spv": "Sunsure Solarpark Six Pvt Ltd", "location": "Augasi", "consumer": "Wonder Cement Ltd", "capMWp": 8.68, "capMW": 6.2, "tariff": null, "discom": "DVVNL", "bdTeam": "Vinod Sir", "consultant": "AR Electro", "ltoaPPA": "06 Mar 2026", "powerDelivery": "15 Aug 2026", "remarks": null, "stagesComplete": 8, "stagesTotal": 11, "status": "Delivered"}, {"sr": "17", "spv": "Sunsure Solarpark Sixteen Pvt Ltd", "location": "Gursarai", "consumer": "Jakson Engineers Ltd", "capMWp": 1.2, "capMW": 0.8, "tariff": null, "discom": "PVVNL", "bdTeam": "Paurush", "consultant": "Topnotch", "ltoaPPA": "13 Mar 2026", "powerDelivery": "27 Aug 2026", "remarks": null, "stagesComplete": 8, "stagesTotal": 11, "status": "Delivered"}, {"sr": "17", "spv": "Sunsure Solarpark Sixteen Pvt Ltd", "location": "Gursarai", "consumer": "Minda Corporation Ltd", "capMWp": 0.8, "capMW": 1.1, "tariff": null, "discom": null, "bdTeam": null, "consultant": null, "ltoaPPA": "22 Jul 2026", "powerDelivery": null, "remarks": null, "stagesComplete": 4, "stagesTotal": 11, "status": "In progress"}];
+
+const state = { search:'', spv:'', location:'', discom:'', bdTeam:'', consultant:'', status:'', sortKey:'sr', sortDir:1 };
+
+const STATUS_ORDER = ['Delivered','Scheduled','In progress','Early stage'];
+const STATUS_CLASS = s => s.replace(' ', '-');
+
+function uniqueSorted(key){
+  return [...new Set(DATA.map(d => d[key]).filter(Boolean))].sort();
+}
+
+function populateSelect(id, values){
+  const sel = document.getElementById(id);
+  values.forEach(v=>{
+    const opt = document.createElement('option');
+    opt.value = v; opt.textContent = v;
+    sel.appendChild(opt);
+  });
+}
+
+populateSelect('fSpv', uniqueSorted('spv'));
+populateSelect('fLocation', uniqueSorted('location'));
+populateSelect('fDiscom', uniqueSorted('discom'));
+populateSelect('fBd', uniqueSorted('bdTeam'));
+populateSelect('fConsultant', uniqueSorted('consultant'));
+populateSelect('fStatus', STATUS_ORDER.filter(s => DATA.some(d=>d.status===s)));
+
+function getFiltered(){
+  const q = state.search.trim().toLowerCase();
+  return DATA.filter(d=>{
+    if(state.spv && d.spv !== state.spv) return false;
+    if(state.location && d.location !== state.location) return false;
+    if(state.discom && d.discom !== state.discom) return false;
+    if(state.bdTeam && d.bdTeam !== state.bdTeam) return false;
+    if(state.consultant && d.consultant !== state.consultant) return false;
+    if(state.status && d.status !== state.status) return false;
+    if(q){
+      const hay = [d.consumer,d.spv,d.location,d.discom,d.bdTeam,d.consultant,d.remarks].join(' ').toLowerCase();
+      if(!hay.includes(q)) return false;
+    }
+    return true;
+  });
+}
+
+function fmtNum(n, dp=2){
+  if(n === null || n === undefined || isNaN(n)) return '<span class="muted">—</span>';
+  return n.toFixed(dp);
+}
+
+function renderKPIs(filtered){
+  const totalProjects = filtered.length;
+  const totalMW = filtered.reduce((s,d)=> s + (d.capMW||0), 0);
+  const tariffs = filtered.map(d=>d.tariff).filter(t=>t!=null);
+  const avgTariff = tariffs.length ? tariffs.reduce((a,b)=>a+b,0)/tariffs.length : null;
+  const counts = {};
+  STATUS_ORDER.forEach(s=> counts[s] = filtered.filter(d=>d.status===s).length);
+
+  const cards = [
+    { key:'', label:'Total Projects', value: totalProjects, sub:`${uniqueSorted('spv').length} SPVs in tracker` },
+    { key:'', label:'Total Capacity', value: totalMW.toFixed(1)+' MW', sub:`${filtered.reduce((s,d)=>s+(d.capMWp||0),0).toFixed(1)} MWp DC` },
+    { key:'', label:'Avg. Tariff', value: avgTariff!=null ? '₹'+avgTariff.toFixed(2) : '—', sub:'per kWh, where quoted' },
+    { key:'Delivered', label:'Delivered', value: counts['Delivered'], sub:'power flowing to consumer' },
+    { key:'Scheduled', label:'Scheduled', value: counts['Scheduled'], sub:'delivery date confirmed' },
+    { key:'In progress', label:'In Progress', value: counts['In progress'] + counts['Early stage'], sub:'mid or early approval stage' },
+  ];
+
+  const row = document.getElementById('kpiRow');
+  row.innerHTML = '';
+  cards.forEach(c=>{
+    const el = document.createElement('div');
+    el.className = 'kpi' + (c.key && state.status===c.key ? ' active':'');
+    el.innerHTML = `<p class="kpi-label">${c.label}</p><p class="kpi-value">${c.value}</p><p class="kpi-sub">${c.sub}</p>`;
+    if(c.key){
+      el.addEventListener('click', ()=>{
+        state.status = state.status === c.key ? '' : c.key;
+        document.getElementById('fStatus').value = state.status;
+        renderAll();
+      });
+    }
+    row.appendChild(el);
+  });
+}
+
+function renderTable(filtered){
+  const sorted = [...filtered].sort((a,b)=>{
+    let av = a[state.sortKey], bv = b[state.sortKey];
+    if(state.sortKey === 'sr'){ av = parseInt(av)||0; bv = parseInt(bv)||0; }
+    if(av === null || av === undefined) av = state.sortDir===1 ? Infinity : -Infinity;
+    if(bv === null || bv === undefined) bv = state.sortDir===1 ? Infinity : -Infinity;
+    if(typeof av === 'string') av = av.toLowerCase();
+    if(typeof bv === 'string') bv = bv.toLowerCase();
+    if(av < bv) return -1*state.sortDir;
+    if(av > bv) return 1*state.sortDir;
+    return 0;
+  });
+
+  const tbody = document.getElementById('tableBody');
+  const emptyState = document.getElementById('emptyState');
+  tbody.innerHTML = '';
+
+  document.getElementById('resultCount').innerHTML =
+    `Showing <b>${filtered.length}</b> of <b>${DATA.length}</b> projects`;
+
+  if(sorted.length === 0){
+    emptyState.style.display = 'block';
+    return;
+  }
+  emptyState.style.display = 'none';
+
+  sorted.forEach(d=>{
+    const tr = document.createElement('tr');
+    const pct = Math.round((d.stagesComplete/d.stagesTotal)*100);
+    tr.innerHTML = `
+      <td class="num">${d.sr ?? '—'}</td>
+      <td class="consumer-cell">
+        <strong>${d.consumer ?? '—'}</strong>
+        ${d.remarks ? `<span>${d.remarks}</span>` : ''}
+      </td>
+      <td>${d.spv ?? '<span class="muted">—</span>'}</td>
+      <td>${d.location ?? '<span class="muted">—</span>'}</td>
+      <td>${d.discom ?? '<span class="muted">—</span>'}</td>
+      <td class="num">${fmtNum(d.capMW,2)}</td>
+      <td class="num">${fmtNum(d.tariff,2)}</td>
+      <td>
+        <div class="progress-wrap">
+          <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+          <span class="progress-text">${d.stagesComplete}/${d.stagesTotal}</span>
+        </div>
+      </td>
+      <td>${d.powerDelivery ?? '<span class="muted">—</span>'}</td>
+      <td><span class="pill ${STATUS_CLASS(d.status)}">${d.status}</span></td>
+      <td>${d.bdTeam ?? '<span class="muted">—</span>'}${d.consultant ? ` <span class="muted">/ ${d.consultant}</span>` : ''}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function updateSortHeaders(){
+  document.querySelectorAll('thead th').forEach(th=>{
+    th.classList.toggle('sorted', th.dataset.key === state.sortKey);
+    const arrow = th.querySelector('.arrow');
+    if(th.dataset.key === state.sortKey){
+      arrow.textContent = state.sortDir === 1 ? '↑' : '↓';
+    } else {
+      arrow.textContent = '↕';
+    }
+  });
+}
+
+function renderAll(){
+  const filtered = getFiltered();
+  renderKPIs(filtered);
+  renderTable(filtered);
+  updateSortHeaders();
+}
+
+document.getElementById('fSearch').addEventListener('input', e=>{ state.search = e.target.value; renderAll(); });
+document.getElementById('fSpv').addEventListener('change', e=>{ state.spv = e.target.value; renderAll(); });
+document.getElementById('fLocation').addEventListener('change', e=>{ state.location = e.target.value; renderAll(); });
+document.getElementById('fDiscom').addEventListener('change', e=>{ state.discom = e.target.value; renderAll(); });
+document.getElementById('fBd').addEventListener('change', e=>{ state.bdTeam = e.target.value; renderAll(); });
+document.getElementById('fConsultant').addEventListener('change', e=>{ state.consultant = e.target.value; renderAll(); });
+document.getElementById('fStatus').addEventListener('change', e=>{ state.status = e.target.value; renderAll(); });
+document.getElementById('resetBtn').addEventListener('click', ()=>{
+  state.search=''; state.spv=''; state.location=''; state.discom=''; state.bdTeam=''; state.consultant=''; state.status='';
+  document.getElementById('fSearch').value='';
+  ['fSpv','fLocation','fDiscom','fBd','fConsultant','fStatus'].forEach(id=> document.getElementById(id).value='');
+  renderAll();
+});
+document.querySelectorAll('thead th').forEach(th=>{
+  th.addEventListener('click', ()=>{
+    const key = th.dataset.key;
+    if(state.sortKey === key){ state.sortDir *= -1; }
+    else { state.sortKey = key; state.sortDir = 1; }
+    renderAll();
+  });
+});
+
+renderAll();
+</script>
+</body>
+</html>
